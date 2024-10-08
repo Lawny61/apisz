@@ -8,11 +8,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
+app.get('/pay', (req, res) => {
     res.send('The API is online intasend LIVE and crypto');
 });
 
-app.post('/payments', async (req, res) => {
+app.post('/', async (req, res) => {
     try{
         let payload = req.body;
     if(payload.challenge){
