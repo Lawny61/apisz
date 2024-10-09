@@ -59,14 +59,14 @@ app.post('/news', async (req, res) => {
     try{
         let payload = req.body;
     if(payload.challenge){
-        if(payload.challenge == 'elikinglive'){
+        if(payload.challenge == 'newsguy'){
             res.status(200).send(payload.challenge)
         }else{
             res.status(401).send('Invalid Challenge')
             return;
         }
     }
-    if(payload.state == 'COMPLETE' || payload.state == 'FAILED'){
+    if(payload.state == 'PENDING' || payload.state == 'FAILED'){
         let dt = {
             state: payload.state,
             apiRef: payload.api_ref
