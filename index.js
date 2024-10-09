@@ -55,7 +55,7 @@ app.post('/', async (req, res) => {
    
 });
 
-app.post('/', async (req, res) => {
+app.post('/news', async (req, res) => {
     try{
         let payload = req.body;
     if(payload.challenge){
