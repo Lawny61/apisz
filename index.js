@@ -8,7 +8,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/pay', (req, res) => {
+app.get('/', (req, res) => {
     res.send('The API is online intasend LIVE and crypto');
 });
 
