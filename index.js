@@ -74,7 +74,7 @@ app.post('/news', async (req, res) => {
         let options = {
             method: 'post',
             // url: 'http://185.203.118.139/pay/upgrade',
-            url: 'https://6c11cc72-66c0-49a4-8406-7135a6c55bb0-00-2frvkzkmre50h.worf.replit.dev/payments'
+            url: 'https://6c11cc72-66c0-49a4-8406-7135a6c55bb0-00-2frvkzkmre50h.worf.replit.dev/payments',
             headers: {
                 'Content-Type': 'application/json'
             },
