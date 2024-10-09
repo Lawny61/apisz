@@ -55,6 +55,49 @@ app.post('/', async (req, res) => {
    
 });
 
+app.post('/', async (req, res) => {
+    try{
+        let payload = req.body;
+    if(payload.challenge){
+        if(payload.challenge == 'elikinglive'){
+            res.status(200).send(payload.challenge)
+        }else{
+            res.status(401).send('Invalid Challenge')
+            return;
+        }
+    }
+    if(payload.state == 'COMPLETE' || payload.state == 'FAILED'){
+        let dt = {
+            state: payload.state,
+            apiRef: payload.api_ref
+        }
+        let options = {
+            method: 'post',
+            url: 'http://185.203.118.139/pay/upgrade',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: dt
+        }
+         await axios(options)
+    }
+
+    }
+    catch(err){
+        let options = {
+            method: 'post',
+            url: 'http://185.203.118.139/pay/upgrade',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: err
+        }
+         await axios(options)
+    }
+    
+   
+});
+
 app.post('/crypto',async(req,res) => {
     let info = req.body
     if(!info.sign){
