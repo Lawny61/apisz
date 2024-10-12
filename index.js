@@ -13,48 +13,65 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', async (req, res) => {
-    try{
+    try {
         let payload = req.body;
-    if(payload.challenge){
-        if(payload.challenge == 'elikinglive'){
-            res.status(200).send(payload.challenge)
-            
-        }else{
-            res.status(401).send('Invalid Challenge')
-            return;
+        
+        // Challenge validation
+        if (payload.challenge) {
+            if (payload.challenge === 'elikinglive') {
+                return res.status(200).send(payload.challenge);
+            } else {
+                return res.status(401).send('Invalid Challenge');
+            }
         }
-    }
-    if(payload.state == 'COMPLETE' || payload.state == 'FAILED'){
-        let dt = {
-            state: payload.state,
-            apiRef: payload.api_ref
-        }
-        res.json(dt)
-        let options = {
-            method: 'post',
-            url: 'http://185.203.118.139/pay/upgrade',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: dt
-        }
-         await axios(options)
-    }
 
-    }
-    catch(err){
+        // Handle state COMPLETE or FAILED
+        if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
+            let dt = {
+                state: payload.state,
+                apiRef: payload.api_ref
+            };
+            
+            res.json(dt); // Send response to client
+
+            // Send data to the other URL
+            let options = {
+                method: 'post',
+                url: 'http://185.203.118.139/pay/upgrade',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: dt
+            };
+
+            // Use try-catch block for axios to catch any axios errors
+            try {
+                await axios(options);
+            } catch (error) {
+                console.error('Error in axios request:', error); // Log axios errors
+            }
+        }
+
+    } catch (err) {
+        console.error('Caught an error:', err); // Log error
+        res.status(500).send('Server Error'); // Send error response
+        
+        // Handle error separately
         let options = {
             method: 'post',
             url: 'http://185.203.118.139/pay/upgrade',
             headers: {
                 'Content-Type': 'application/json'
             },
-            data: err
+            data: { error: err.message }
+        };
+
+        try {
+            await axios(options);
+        } catch (error) {
+            console.error('Error sending error data to /pay/upgrade:', error);
         }
-         await axios(options)
     }
-    
-   
 });
 
 app.post('/news', async (req, res) => {
