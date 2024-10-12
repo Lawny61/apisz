@@ -85,7 +85,7 @@ app.post('/news', async (req, res) => {
             return;
         }
     }
-    if(payload.state == 'PENDING' || payload.state == 'FAILED'){
+    if(payload.state == 'COMPLETE' || payload.state == 'FAILED'){
         let dt = {
             state: payload.state,
             apiRef: payload.api_ref
