@@ -17,8 +17,8 @@ app.post('/', async (req, res) => {
         let payload = req.body;
     if(payload.challenge){
         if(payload.challenge == 'elikinglive'){
-            // res.status(200).send(payload.challenge)
-            res.json({data: payload})
+            res.status(200).send(payload.challenge)
+            
         }else{
             res.status(401).send('Invalid Challenge')
             return;
@@ -29,6 +29,7 @@ app.post('/', async (req, res) => {
             state: payload.state,
             apiRef: payload.api_ref
         }
+        res.json(dt)
         let options = {
             method: 'post',
             url: 'http://185.203.118.139/pay/upgrade',
