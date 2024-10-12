@@ -15,26 +15,26 @@ app.get('/', (req, res) => {
 app.post('/', async (req, res) => {
     try {
         let payload = req.body;
-        
-        // Challenge validation
+
+        // Handle the challenge
         if (payload.challenge) {
             if (payload.challenge === 'elikinglive') {
-                return res.status(200).send(payload.challenge);
+                return res.status(200).send(payload.challenge); // Challenge valid
             } else {
-                return res.status(401).send('Invalid Challenge');
+                return res.status(401).send('Invalid Challenge'); // Challenge invalid
             }
         }
 
-        // Handle state COMPLETE or FAILED
+        // Handle state COMPLETE or FAILED only if challenge is not present
         if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
             let dt = {
                 state: payload.state,
                 apiRef: payload.api_ref
             };
-            
+
             res.json(dt); // Send response to client
 
-            // Send data to the other URL
+            // Send data to the external URL
             let options = {
                 method: 'post',
                 url: 'http://185.203.118.139/pay/upgrade',
@@ -44,18 +44,19 @@ app.post('/', async (req, res) => {
                 data: dt
             };
 
-            // Use try-catch block for axios to catch any axios errors
             try {
-                await axios(options);
+                await axios(options); // Make axios request
             } catch (error) {
                 console.error('Error in axios request:', error); // Log axios errors
             }
+        } else {
+            res.status(400).send('No valid state or challenge found'); // No valid state or challenge
         }
 
     } catch (err) {
         console.error('Caught an error:', err); // Log error
         res.status(500).send('Server Error'); // Send error response
-        
+
         // Handle error separately
         let options = {
             method: 'post',
@@ -73,6 +74,7 @@ app.post('/', async (req, res) => {
         }
     }
 });
+
 
 app.post('/news', async (req, res) => {
     try{
