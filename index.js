@@ -33,10 +33,10 @@ app.post('/', async (req, res) => {
   try {
     const payload = req.body;
 
-    if (payload.challenge) {
-      validateChallenge(payload.challenge, 'elikinglive');
-      return res.status(200).send(payload.challenge);
-    }
+    // if (payload.challenge) {
+    //   validateChallenge(payload.challenge, 'elikinglive');
+    //   return res.status(200).send(payload.challenge);
+    // }
 
     if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
       const data = { state: payload.state, apiRef: payload.api_ref };
