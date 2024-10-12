@@ -1,155 +1,101 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const app = express();
 const axios = require('axios');
+
+const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const validateChallenge = (challenge, expectedChallenge) => {
+  if (challenge !== expectedChallenge) {
+    throw new Error('Invalid Challenge');
+  }
+};
+
+const sendRequest = async (url, data) => {
+  const options = {
+    method: 'post',
+    url,
+    headers: { 'Content-Type': 'application/json' },
+    data
+  };
+  return axios(options);
+};
+
 app.get('/', (req, res) => {
-    res.send('The API is online intasend LIVE and crypto');
+  res.send('The API is online intasend LIVE and crypto');
 });
 
 app.post('/', async (req, res) => {
-    try {
-        let payload = req.body;
+  try {
+    const payload = req.body;
 
-        // Handle the challenge
-        if (payload.challenge) {
-            if (payload.challenge === 'elikinglive') {
-                return res.status(200).send(payload.challenge); // Challenge valid
-            } else {
-                return res.status(401).send('Invalid Challenge'); // Challenge invalid
-            }
-        }
-
-        // Handle state COMPLETE or FAILED only if challenge is not present
-        if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
-            let dt = {
-                state: payload.state,
-                apiRef: payload.api_ref
-            };
-
-            res.json(dt); // Send response to client
-
-            // Send data to the external URL
-            let options = {
-                method: 'post',
-                url: 'http://185.203.118.139/pay/upgrade',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                data: dt
-            };
-
-            try {
-                await axios(options); // Make axios request
-            } catch (error) {
-                console.error('Error in axios request:', error); // Log axios errors
-            }
-        } else {
-            res.status(400).send('No valid state or challenge found'); // No valid state or challenge
-        }
-
-    } catch (err) {
-        console.error('Caught an error:', err); // Log error
-        res.status(500).send('Server Error'); // Send error response
-
-        // Handle error separately
-        let options = {
-            method: 'post',
-            url: 'http://185.203.118.139/pay/upgrade',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: { error: err.message }
-        };
-
-        try {
-            await axios(options);
-        } catch (error) {
-            console.error('Error sending error data to /pay/upgrade:', error);
-        }
+    if (payload.challenge) {
+      validateChallenge(payload.challenge, 'elikinglive');
+      return res.status(200).send(payload.challenge);
     }
-});
 
+    if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
+      const data = { state: payload.state, apiRef: payload.api_ref };
+      res.json(data);
+      await sendRequest('http://185.203.118.139/pay/upgrade', data);
+    }
+  } catch (err) {
+    if (err.message === 'Invalid Challenge') {
+      return res.status(401).send('Invalid Challenge');
+    }
+    await sendRequest('http://185.203.118.139/pay/upgrade', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 app.post('/news', async (req, res) => {
-    try{
-        let payload = req.body;
-    // if(payload.challenge){
-    //     if(payload.challenge == 'newsguy'){
-    //         res.status(200).send(payload.challenge)
-    //     }else{
-    //         res.status(401).send('Invalid Challenge')
-    //         return;
-    //     }
-    // }
-    if(payload.state == 'COMPLETE' || payload.state == 'FAILED'){
-        let dt = {
-            state: payload.state,
-            apiRef: payload.api_ref
-        }
-        let options = {
-            method: 'post',
-            // url: 'http://185.203.118.139/news/upgrade',
-            url: 'https://5006-102-0-3-116.ngrok-free.app/pay',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: dt
-        }
-         await axios(options)
+  try {
+    const payload = req.body;
+
+    if (payload.challenge) {
+      validateChallenge(payload.challenge, 'newsguy');
+      return res.status(200).send(payload.challenge);
     }
 
+    if (payload.state === 'PENDING' || payload.state === 'FAILED') {
+      const data = { state: payload.state, apiRef: payload.api_ref };
+      await sendRequest('http://185.203.118.139/news/upgrade', data);
+      res.json(data);
     }
-    catch(err){
-        let options = {
-            method: 'post',
-            url: 'http://185.203.118.139/news/upgrade',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: err
-        }
-         await axios(options)
+  } catch (err) {
+    if (err.message === 'Invalid Challenge') {
+      return res.status(401).send('Invalid Challenge');
     }
-    
-   
+    await sendRequest('http://185.203.118.139/news/upgrade', err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-app.post('/crypto',async(req,res) => {
-    let info = req.body
-    if(!info.sign){
-        return res.status(400).send('Invalid request')
-    }
-    let confirm = info.status
-    if(confirm == 'paid' || confirm == 'paid_over'){
-      await  sendPay(info)
-    }else if(confirm == 'cancel' || confirm == 'wrong_amount' || confirm == 'fail' || confirm == 'system_fail'){
-       await sendPay(info)
-    }
-    
-    
-})
+app.post('/crypto', async (req, res) => {
+  const info = req.body;
+  if (!info.sign) {
+    return res.status(400).send('Invalid request');
+  }
 
-async function sendPay(pay){
-    let options = {
-        method: 'post',
-        url: 'http://185.203.118.139/confirm',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        data: {
-            status: pay.status,
-            order_id: pay.order_id
-        }
-    }
-   await axios(options)
-} 
+  const confirm = info.status;
+  if (['paid', 'paid_over', 'cancel', 'wrong_amount', 'fail', 'system_fail'].includes(confirm)) {
+    await sendPay(info);
+    res.status(200).send('Payment processed');
+  } else {
+    res.status(400).send('Invalid status');
+  }
+});
 
-app.listen(3900, () => console.log('Server is online!!'));
+async function sendPay(pay) {
+  await sendRequest('http://185.203.118.139/confirm', {
+    status: pay.status,
+    order_id: pay.order_id
+  });
+}
 
-
+const PORT = process.env.PORT || 3900;
+app.listen(PORT, () => console.log(`Server is online on port ${PORT}!`));
