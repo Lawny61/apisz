@@ -17,7 +17,7 @@ app.post('/', async (req, res) => {
         let payload = req.body;
     if(payload.challenge){
         if(payload.challenge == 'elikinglive'){
-            res.status(200).send(payload.challenge)
+            // res.status(200).send(payload.challenge)
             res.json({data: payload})
         }else{
             res.status(401).send('Invalid Challenge')
