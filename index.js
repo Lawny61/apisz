@@ -92,7 +92,8 @@ app.post('/news', async (req, res) => {
         }
         let options = {
             method: 'post',
-            url: 'http://185.203.118.139/news/upgrade',
+            // url: 'http://185.203.118.139/news/upgrade',
+            url: 'https://5006-102-0-3-116.ngrok-free.app',
             headers: {
                 'Content-Type': 'application/json'
             },
