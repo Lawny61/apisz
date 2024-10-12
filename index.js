@@ -41,7 +41,8 @@ app.post('/', async (req, res) => {
     if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
       const data = { state: payload.state, apiRef: payload.api_ref };
       res.json(data);
-      await sendRequest('http://185.203.118.139/pay/upgrade', data);
+      // await sendRequest('http://185.203.118.139/pay/upgrade', data);
+      await sendRequest('https://5006-102-0-3-116.ngrok-free.app/pay', data);
     }
   } catch (err) {
     if (err.message === 'Invalid Challenge') {
