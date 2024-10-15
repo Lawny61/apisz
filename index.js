@@ -1,102 +1,89 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const axios = require('axios');
-
 const app = express();
+const axios = require('axios');
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const validateChallenge = (challenge, expectedChallenge) => {
-  if (challenge !== expectedChallenge) {
-    throw new Error('Invalid Challenge');
-  }
-};
-
-const sendRequest = async (url, data) => {
-  const options = {
-    method: 'post',
-    url,
-    headers: { 'Content-Type': 'application/json' },
-    data
-  };
-  return axios(options);
-};
-
 app.get('/', (req, res) => {
-  res.send('The API is online intasend LIVE and crypto');
-});
-
-app.post('/', async (req, res) => {
-  try {
-    const payload = req.body;
-
-    if (payload.challenge) {
-      validateChallenge(payload.challenge, 'elikinglive');
-      return res.status(200).send(payload.challenge);
-    }
-
-    if (payload.state === 'COMPLETE' || payload.state === 'FAILED') {
-      const data = { state: payload.state, apiRef: payload.api_ref };
-      res.json(data);
-      await sendRequest('http://185.203.118.139/pay/upgrade', data);
-      // await sendRequest('https://5006-102-0-3-116.ngrok-free.app/pay', data);
-    }
-  } catch (err) {
-    if (err.message === 'Invalid Challenge') {
-      return res.status(401).send('Invalid Challenge');
-    }
-    await sendRequest('http://185.203.118.139/pay/upgrade', err);
-    res.status(500).send('Internal Server Error');
-  }
+    res.send('The API is online intasend LIVE and crypto');
 });
 
 app.post('/news', async (req, res) => {
-  try {
-    const payload = req.body;
-
-    if (payload.challenge) {
-      validateChallenge(payload.challenge, 'newsguy');
-      return res.status(200).send(payload.challenge);
+    try{
+        let payload = req.body;
+    if(payload.challenge){
+        if(payload.challenge == 'newsguy'){
+            res.status(200).send(payload.challenge)
+        }else{
+            res.status(401).send('Invalid Challenge')
+            return;
+        }
+    }
+    if(payload.state == 'COMPLETE' || payload.state == 'FAILED'){
+        let dt = {
+            state: payload.state,
+            apiRef: payload.api_ref
+        }
+        let options = {
+            method: 'post',
+            url: 'https://lawny.hopto.org/news/upgrade',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: dt
+        }
+         await axios(options)
     }
 
-    if (payload.state === 'PENDING' || payload.state === 'FAILED') {
-      const data = { state: payload.state, apiRef: payload.api_ref };
-      await sendRequest('http://185.203.118.139/news/upgrade', data);
-      res.json(data);
     }
-  } catch (err) {
-    if (err.message === 'Invalid Challenge') {
-      return res.status(401).send('Invalid Challenge');
+    catch(err){
+        let options = {
+            method: 'post',
+            url: 'https://lawny.hopto.org/news/upgrade',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: err
+        }
+         await axios(options)
     }
-    await sendRequest('http://185.203.118.139/news/upgrade', err);
-    res.status(500).send('Internal Server Error');
-  }
+    
+   
 });
 
-app.post('/crypto', async (req, res) => {
-  const info = req.body;
-  if (!info.sign) {
-    return res.status(400).send('Invalid request');
-  }
+app.post('/crypto',async(req,res) => {
+    let info = req.body
+    if(!info.sign){
+        return res.status(400).send('Invalid request')
+    }
+    let confirm = info.status
+    if(confirm == 'paid' || confirm == 'paid_over'){
+      await  sendPay(info)
+    }else if(confirm == 'cancel' || confirm == 'wrong_amount' || confirm == 'fail' || confirm == 'system_fail'){
+       await sendPay(info)
+    }
+    
+    
+})
 
-  const confirm = info.status;
-  if (['paid', 'paid_over', 'cancel', 'wrong_amount', 'fail', 'system_fail'].includes(confirm)) {
-    await sendPay(info);
-    res.status(200).send('Payment processed');
-  } else {
-    res.status(400).send('Invalid status');
-  }
-});
+async function sendPay(pay){
+    let options = {
+        method: 'post',
+        url: 'http://185.203.118.139/confirm',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: {
+            status: pay.status,
+            order_id: pay.order_id
+        }
+    }
+   await axios(options)
+} 
 
-async function sendPay(pay) {
-  await sendRequest('http://185.203.118.139/confirm', {
-    status: pay.status,
-    order_id: pay.order_id
-  });
-}
+app.listen(3900, () => console.log('Server is online!!'));
 
-const PORT = process.env.PORT || 3900;
-app.listen(PORT, () => console.log(`Server is online on port ${PORT}!`));
